@@ -14,8 +14,8 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      transition: background 0.3s, color 0.3s;
       text-align: center;
+      transition: background 0.3s, color 0.3s;
     }
 
     .container {
@@ -24,6 +24,18 @@
       background: #333;
       border-radius: 8px;
       padding: 20px;
+    }
+
+    fieldset {
+      border: 1px solid #555;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    legend {
+      font-weight: bold;
+      padding: 0 10px;
     }
 
     input, select {
@@ -46,18 +58,24 @@
       border-radius: 8px;
     }
 
-    .light-mode {
-      background: #fefefe;
-      color: #222;
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
     }
 
-    .light-mode .result {
-      background: #ddd;
+    th, td {
+      padding: 6px;
+      border-bottom: 1px solid #555;
+      text-align: left;
     }
 
-    .light-mode input, .light-mode select {
-      background: #fff;
-      color: #000;
+    th {
+      background: #555;
+    }
+
+    .highlight {
+      color: #ffa500;
     }
 
     .toggle-container {
@@ -65,8 +83,12 @@
     }
 
     @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+
       input, select {
-        width: 100%;
+        font-size: 16px;
       }
     }
   </style>
@@ -75,39 +97,32 @@
   <div class="container">
     <h2>MapleStory Accuracy & Hit Rate Calculator</h2>
 
-    <div class="toggle-container">
-      <label>
-        <input type="checkbox" id="modeToggle"> Light Mode
-      </label>
-    </div>
+    <!-- Removed Light Mode Toggle -->
+    
+    <!-- Monster / Boss Select Panel -->
+    <fieldset>
+      <legend>Monster / Boss Selection</legend>
+      <label for="monsterSelect">Select Monster:</label>
+      <select id="monsterSelect">
+        <option value="">-- Choose a Monster --</option>
+      </select>
 
-    <!-- Reordered form elements -->
-    <label for="monsterSelect">Select Monster:</label>
-    <select id="monsterSelect">
-      <option value="">-- Choose a Monster --</option>
-    </select>
+      <label for="bossSelect">Select Boss:</label>
+      <select id="bossSelect">
+        <option value="">-- Choose a Boss --</option>
+      </select>
 
-    <label for="bossSelect">Select Boss:</label>
-    <select id="bossSelect">
-      <option value="">-- Choose a Boss --</option>
-    </select>
-
-    <label>Monster Level:
-      <input type="number" id="monsterLevel" value="80">
-    </label>
-    <label>Monster Avoid:
-      <input type="number" id="avoid" value="30">
-    </label>
-
-    <label>Player Level:
-      <input type="number" id="playerLevel" value="70">
-    </label>
-    <label>Your Accuracy:
-      <input type="number" id="accuracy" value="100">
-    </label>
-    <label>Desired Hit Rate (%):
-      <input type="number" step="1" id="desiredHitRate" value="25">
-    </label>
+      <label for="monsterLevel">Monster Level: <input type="number" id="monsterLevel" value="80"></label>
+      <label for="avoid">Monster Avoid: <input type="number" id="avoid" value="30"></label>
+    </fieldset>
+	
+	<!-- Player Stats Panel -->
+    <fieldset>
+      <legend>Player Stats</legend>
+      <label>Level: <input type="number" id="playerLevel" value="70"></label>
+      <label>Accuracy: <input type="number" id="accuracy" value="100"></label>
+      <label>Desired Hit Rate (%): <input type="number" step="1" id="desiredHitRate" value="25"></label>
+    </fieldset>
 
     <div class="result" id="output"></div>
   </div>
@@ -203,9 +218,7 @@
     const accuracyInput = document.getElementById('accuracy');
     const desiredHitRateInput = document.getElementById('desiredHitRate');
     const output = document.getElementById('output');
-    const modeToggle = document.getElementById('modeToggle');
 
-    // Populate monster dropdown
     for (const name in monsters) {
       const option = document.createElement('option');
       option.value = name;
@@ -213,7 +226,6 @@
       monsterSelect.appendChild(option);
     }
 
-    // Populate boss dropdown
     for (const name in bosses) {
       const option = document.createElement('option');
       option.value = name;
@@ -221,44 +233,36 @@
       bossSelect.appendChild(option);
     }
 
-    // Auto calculate when the monster is selected
     monsterSelect.addEventListener('change', () => {
-      // Deselect boss if monster is selected
       bossSelect.selectedIndex = 0;
-
       const selected = monsterSelect.value;
       if (monsters[selected]) {
         monsterLevelInput.value = monsters[selected].level;
         avoidInput.value = monsters[selected].avoid;
-        calculate(); // Call calculate whenever monster selection changes
+        calculate();
       }
     });
 
-    // Auto calculate when the boss is selected
     bossSelect.addEventListener('change', () => {
-      // Deselect monster if boss is selected
       monsterSelect.selectedIndex = 0;
-
       const selected = bossSelect.value;
       if (bosses[selected]) {
         monsterLevelInput.value = bosses[selected].level;
         avoidInput.value = bosses[selected].avoid;
-        calculate(); // Call calculate whenever boss selection changes
+        calculate();
       }
     });
 
-    // Deselect both monster and boss if monster level or avoid is changed
     [monsterLevelInput, avoidInput].forEach(input => {
       input.addEventListener('input', () => {
-        monsterSelect.selectedIndex = 0;  // Deselect monster
-        bossSelect.selectedIndex = 0;     // Deselect boss
-        calculate(); // Recalculate based on the new input values
+        monsterSelect.selectedIndex = 0;
+        bossSelect.selectedIndex = 0;
+        calculate();
       });
     });
 
-    // Do not deselect monster or boss when player level or accuracy is changed
     [playerLevelInput, accuracyInput, desiredHitRateInput].forEach(input => {
-      input.addEventListener('input', calculate);  // Recalculate without changing selections
+      input.addEventListener('input', calculate);
     });
 
     window.addEventListener('load', () => {
@@ -271,23 +275,7 @@
         desiredHitRateInput.value = saved.desiredHitRate;
       }
 
-      if (localStorage.getItem('mode') === 'light') {
-        document.body.classList.add('light-mode');
-        modeToggle.checked = true;
-      }
-
-      // Auto-calculate on load to display initial result
       calculate();
-    });
-
-    modeToggle.addEventListener('change', () => {
-      if (modeToggle.checked) {
-        document.body.classList.add('light-mode');
-        localStorage.setItem('mode', 'light');
-      } else {
-        document.body.classList.remove('light-mode');
-        localStorage.setItem('mode', 'dark');
-      }
     });
 
     function calculate() {
@@ -305,19 +293,44 @@
       const actualHitRate = accuracy / (factor * avoid) - 1;
       const actualPercent = actualHitRate * 100;
 
-      // Calculate for 100% and 1% hit rate
-      const requiredAccuracy100 = (1 + 1) * factor * avoid;
-      const requiredAccuracy1 = (1 + 0.01) * factor * avoid;
+      const thresholds = [
+        { label: "1%", rate: 0.01 },
+        { label: `${desiredHitRatePercent}%`, rate: desiredHitRate },
+        { label: "100%", rate: 1 }
+      ];
 
-      // Display the result with both 1% and 100% accuracy
+      let tableRows = "";
+      for (const threshold of thresholds) {
+        const reqAcc = (1 + threshold.rate) * factor * avoid;
+        const extraAcc = Math.max(reqAcc - accuracy, 0);
+        const dexNeeded = extraAcc / 0.8;
+
+        tableRows += `
+          <tr>
+            <td>${threshold.label}</td>
+            <td>${reqAcc.toFixed(2)}</td>
+            <td class="${extraAcc > 0 ? 'highlight' : ''}">${extraAcc.toFixed(2)}</td>
+            <td class="${extraAcc > 0 ? 'highlight' : ''}">${dexNeeded.toFixed(2)}</td>
+          </tr>
+        `;
+      }
+
       output.innerHTML = `
-        <strong>Results:</strong><br>
-        Required Accuracy for ${desiredHitRatePercent.toFixed(2)}% hit rate: <strong>${requiredAccuracy.toFixed(2)}</strong><br>
-        With ${accuracy} Accuracy, your actual hit rate is: 
-        <strong>${actualPercent.toFixed(2)}%</strong><br>
-        <br>
-        Required Accuracy for 100% hit rate: <strong>${requiredAccuracy100.toFixed(2)}</strong><br>
-        Required Accuracy for 1% hit rate: <strong>${requiredAccuracy1.toFixed(2)}</strong>
+        <strong>Current Accuracy:</strong> ${accuracy}<br>
+        <strong>Current Hit Rate:</strong> <span class="highlight">${actualPercent.toFixed(2)}%</span><br><br>
+        <table>
+          <thead>
+            <tr>
+              <th>Hit Rate</th>
+              <th>Req. Acc</th>
+              <th>Acc Needed</th>
+              <th>DEX Needed</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
       `;
 
       const inputs = {
