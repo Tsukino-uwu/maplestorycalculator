@@ -96,8 +96,6 @@
 <body>
   <div class="container">
     <h2>MapleStory Accuracy & Hit Rate Calculator</h2>
-
-    <!-- Removed Light Mode Toggle -->
     
     <!-- Monster / Boss Select Panel -->
     <fieldset>
@@ -116,7 +114,7 @@
       <label for="avoid">Monster Avoid: <input type="number" id="avoid" value="30"></label>
     </fieldset>
 	
-	<!-- Player Stats Panel -->
+    <!-- Player Stats Panel -->
     <fieldset>
       <legend>Player Stats</legend>
       <label>Level: <input type="number" id="playerLevel" value="70"></label>
@@ -308,9 +306,9 @@
         tableRows += `
           <tr>
             <td>${threshold.label}</td>
-            <td>${reqAcc.toFixed(2)}</td>
-            <td class="${extraAcc > 0 ? 'highlight' : ''}">${extraAcc.toFixed(2)}</td>
-            <td class="${extraAcc > 0 ? 'highlight' : ''}">${dexNeeded.toFixed(2)}</td>
+            <td>${Math.ceil(reqAcc)}</td> <!-- Round up and remove .00 -->
+            <td class="${extraAcc > 0 ? 'highlight' : ''}">${Math.ceil(extraAcc)}</td> <!-- Round up and remove .00 -->
+            <td class="${extraAcc > 0 ? 'highlight' : ''}">${Math.ceil(dexNeeded)}</td> <!-- Round up and remove .00 -->
           </tr>
         `;
       }
