@@ -11,20 +11,21 @@
       padding: 20px;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;
+      min-height: 100vh;
       margin: 0;
-      text-align: center;
-      transition: background 0.3s, color 0.3s;
     }
 
     .container {
-      max-width: 600px;
-      width: 100%;
-      background: #333;
-      border-radius: 8px;
-      padding: 20px;
-    }
+	max-width: 800px;
+	width: 100%;
+	background: #333;
+	border-radius: 8px;
+	padding: 20px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+	border: 1px solid #444; 
+	}
+	
 
     fieldset {
       border: 1px solid #555;
@@ -57,6 +58,10 @@
       background: #444;
       border-radius: 8px;
     }
+	
+	#output {
+     text-align: center;
+}
 
     table {
       width: 100%;
@@ -78,15 +83,13 @@
       color: #ffa500;
     }
 
-    .toggle-container {
-      margin-top: 15px;
+    .flex-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
     }
 
     @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-
       input, select {
         font-size: 16px;
       }
@@ -125,7 +128,93 @@
     <div class="result" id="output"></div>
   </div>
 
+  <div class="container">
+    <!-- Gear Input Panel -->
+    <fieldset>
+      <legend><button id="resetButton" style="margin-top: 10px;">Reset</button></legend>
+      <div class="flex-grid">
+        <div>
+          <label>Weapon ACC: <input type="number" id="weaponAcc" value="0"></label>
+          <label>Weapon DEX: <input type="number" id="weaponDex" value="0"></label>
+        </div>
+        <div>
+          <label>Helm ACC: <input type="number" id="helmAcc" value="0"></label>
+          <label>Helm DEX: <input type="number" id="helmDex" value="0"></label>
+        </div>
+        <div>
+          <label>Overall ACC: <input type="number" id="overallAcc" value="0"></label>
+          <label>Overall DEX: <input type="number" id="overallDex" value="0"></label>
+        </div>
+        <div>
+          <label>Gloves ACC: <input type="number" id="glovesAcc" value="0"></label>
+          <label>Gloves DEX: <input type="number" id="glovesDex" value="0"></label>
+        </div>
+        <div>
+          <label>Face ACC: <input type="number" id="faceAcc" value="0"></label>
+          <label>Face DEX: <input type="number" id="faceDex" value="0"></label>
+        </div>
+        <div>
+          <label>Pendant ACC: <input type="number" id="pendantAcc" value="0"></label>
+          <label>Pendant DEX: <input type="number" id="pendantDex" value="0"></label>
+        </div>
+        <div>
+          <label>Earrings ACC: <input type="number" id="earringsAcc" value="0"></label>
+          <label>Earrings DEX: <input type="number" id="earringsDex" value="0"></label>
+        </div>
+        <div>
+          <label>Shoes ACC: <input type="number" id="shoesAcc" value="0"></label>
+          <label>Shoes DEX: <input type="number" id="shoesDex" value="0"></label>
+        </div>
+        <div>
+        <label>Base DEX: <input type="number" id="baseDex" value="4"></label>
+        </div>
+        <div>
+        <label>Base LUK: <input type="number" id="baseLuk" value="4"></label>
+        </div>
+        </div>
+    </fieldset>
+
+    <!-- Buff Toggles -->
+    <fieldset>
+      2nd Job Mastery:
+      <label>
+        <select id="mastery">
+          <option value="0">None</option>
+		  <option value="3">3</option>
+		  <option value="5">5</option>
+		  <option value="9">9</option>
+		  <option value="19">19</option>
+          <option value="20">maxed (+20)</option>
+        </select>
+      </label>
+      <label>
+        Potion/Buff:
+        <select id="buffSelect">
+          <option value="0">None</option>
+          <option value="5">Sniper Potion (+5)</option>
+		  <option value="9">Thief Elixir (+9)</option>
+          <option value="10">Sniper Pill (+10)</option>
+          <option value="20">Bless (+20)</option>
+		  <option value="100">Maple Pop (+100)</option>
+        </select>
+      </label>
+      <label>
+        Hex of the Beholder:
+        <select id="hexSelect">
+          <option value="0">None</option>
+          <option value="20">Level 20 (+20 ACC)</option>
+          <option value="25">Level 25 (+25 ACC)</option>
+        </select>
+      </label>
+    </fieldset>
+
+    <!-- Summary ACC From Gear/Buffs -->
+    <div class="result" id="gearSummary"></div>
+  </div>
+  
   <script>
+    const getNumber = (id) => parseFloat(document.getElementById(id).value) || 0;
+
     const monsters = {
       Warrior2ndJobAdv: { level: 35, avoid: 10 },
       Warrior3rdJobAdv: { level: 80, avoid: 15 },
@@ -232,24 +321,26 @@
     }
 
     monsterSelect.addEventListener('change', () => {
-      bossSelect.selectedIndex = 0;
-      const selected = monsterSelect.value;
-      if (monsters[selected]) {
-        monsterLevelInput.value = monsters[selected].level;
-        avoidInput.value = monsters[selected].avoid;
-        calculate();
-      }
-    });
+  bossSelect.selectedIndex = 0;
+  const selected = monsterSelect.value;
+  if (monsters[selected]) {
+    monsterLevelInput.value = monsters[selected].level;
+    avoidInput.value = monsters[selected].avoid;
+    calculate();
+    saveInputs();  // Save the updated level and avoid values after selection
+  }
+});
 
-    bossSelect.addEventListener('change', () => {
-      monsterSelect.selectedIndex = 0;
-      const selected = bossSelect.value;
-      if (bosses[selected]) {
-        monsterLevelInput.value = bosses[selected].level;
-        avoidInput.value = bosses[selected].avoid;
-        calculate();
-      }
-    });
+bossSelect.addEventListener('change', () => {
+  monsterSelect.selectedIndex = 0;
+  const selected = bossSelect.value;
+  if (bosses[selected]) {
+    monsterLevelInput.value = bosses[selected].level;
+    avoidInput.value = bosses[selected].avoid;
+    calculate();
+    saveInputs();  // Save the updated level and avoid values after selection
+  }
+});
 
     [monsterLevelInput, avoidInput].forEach(input => {
       input.addEventListener('input', () => {
@@ -263,83 +354,168 @@
       input.addEventListener('input', calculate);
     });
 
-    window.addEventListener('load', () => {
-      const saved = JSON.parse(localStorage.getItem('mapleInputs'));
-      if (saved) {
-        playerLevelInput.value = saved.playerLevel;
-        monsterLevelInput.value = saved.monsterLevel;
-        avoidInput.value = saved.avoid;
-        accuracyInput.value = saved.accuracy;
-        desiredHitRateInput.value = saved.desiredHitRate;
-      }
-
-      calculate();
-    });
-
     function calculate() {
-      const playerLevel = parseInt(playerLevelInput.value);
-      const monsterLevel = parseInt(monsterLevelInput.value);
-      const avoid = parseFloat(avoidInput.value);
-      const accuracy = parseFloat(accuracyInput.value);
-      const desiredHitRatePercent = parseFloat(desiredHitRateInput.value);
-      const desiredHitRate = desiredHitRatePercent / 100;
+  const playerLevel = getNumber("playerLevel");
+  const monsterLevel = getNumber("monsterLevel");
+  const avoid = getNumber("avoid");
+  const accuracy = getNumber("accuracy");
+  const desiredHitRatePercent = getNumber("desiredHitRate");
+  const desiredHitRate = desiredHitRatePercent / 100;
 
-      const D = Math.max(monsterLevel - playerLevel, 0);
-      const factor = 1.84 + 0.07 * D;
+  const D = Math.max(monsterLevel - playerLevel, 0);
+  const factor = 1.84 + 0.07 * D;
 
-      const requiredAccuracy = (1 + desiredHitRate) * factor * avoid;
-      const actualHitRate = accuracy / (factor * avoid) - 1;
-      const actualPercent = actualHitRate * 100;
+  const actualHitRate = accuracy / (factor * avoid) - 1;
+  const actualPercent = actualHitRate * 100;
 
-      const thresholds = [
-        { label: "1%", rate: 0.01 },
-        { label: `${desiredHitRatePercent}%`, rate: desiredHitRate },
-        { label: "100%", rate: 1 }
-      ];
+  const thresholds = [
+    { label: "1%", rate: 0.01 },
+    { label: `${desiredHitRatePercent}%`, rate: desiredHitRate },
+    { label: "100%", rate: 1 }
+  ];
 
-      let tableRows = "";
-      for (const threshold of thresholds) {
-        const reqAcc = (1 + threshold.rate) * factor * avoid;
-        const extraAcc = Math.max(reqAcc - accuracy, 0);
-        const dexNeeded = extraAcc / 0.8;
+  let tableRows = "";
+  for (const threshold of thresholds) {
+    const reqAcc = (1 + threshold.rate) * factor * avoid;
+    const extraAcc = Math.max(reqAcc - accuracy, 0);
+    const dexNeeded = extraAcc / 0.8;
 
-        tableRows += `
-          <tr>
-            <td>${threshold.label}</td>
-            <td>${Math.ceil(reqAcc)}</td> <!-- Round up and remove .00 -->
-            <td class="${extraAcc > 0 ? 'highlight' : ''}">${Math.ceil(extraAcc)}</td> <!-- Round up and remove .00 -->
-            <td class="${extraAcc > 0 ? 'highlight' : ''}">${Math.ceil(dexNeeded)}</td> <!-- Round up and remove .00 -->
-          </tr>
-        `;
-      }
+    tableRows += `
+      <tr>
+        <td>${threshold.label}</td>
+        <td>${Math.ceil(reqAcc)}</td>
+        <td class="${extraAcc > 0 ? 'highlight' : ''}">${Math.ceil(extraAcc)}</td>
+        <td class="${extraAcc > 0 ? 'highlight' : ''}">${Math.ceil(dexNeeded)}</td>
+      </tr>
+    `;
+  }
 
-      output.innerHTML = `
-        <strong>Current Accuracy:</strong> ${accuracy}<br>
-        <strong>Current Hit Rate:</strong> <span class="highlight">${actualPercent.toFixed(2)}%</span><br><br>
-        <table>
-          <thead>
-            <tr>
-              <th>Hit Rate</th>
-              <th>Req. Acc</th>
-              <th>Acc Needed</th>
-              <th>DEX Needed</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-      `;
+  // ACC from Gear
+  const gearAcc = getNumber("weaponAcc") + getNumber("helmAcc") + getNumber("overallAcc") +
+    getNumber("glovesAcc") + getNumber("faceAcc") + getNumber("pendantAcc") +
+    getNumber("earringsAcc") + getNumber("shoesAcc");
 
-      const inputs = {
-        playerLevel,
-        monsterLevel,
-        avoid,
-        accuracy,
-        desiredHitRate: desiredHitRatePercent
-      };
-      localStorage.setItem('mapleInputs', JSON.stringify(inputs));
+  // DEX from Gear (converted to ACC)
+  const gearDex = getNumber("weaponDex") + getNumber("helmDex") + getNumber("overallDex") +
+    getNumber("glovesDex") + getNumber("faceDex") + getNumber("pendantDex") +
+    getNumber("earringsDex") + getNumber("shoesDex");
+
+  // DEX from Gear converted to ACC (1 DEX = 0.8 ACC)
+  const dexFromGearAsAcc = gearDex * 0.8;
+
+  const baseDex = getNumber("baseDex");
+  const baseLuk = getNumber("baseLuk");
+
+  // ACC from Base DEX and LUK
+  const accFromDex = baseDex * 0.8;
+  const accFromLuk = baseLuk * 0.5;
+
+  // Mastery, Potion/Buff, and Hex
+  const masteryAcc = parseInt(document.getElementById("mastery").value);
+  const potionAcc = parseInt(document.getElementById("buffSelect").value);
+  const hexAcc = parseInt(document.getElementById("hexSelect").value);
+
+  // Total ACC calculation
+  const totalAcc = gearAcc + dexFromGearAsAcc + accFromDex + accFromLuk + masteryAcc + potionAcc + hexAcc;
+
+  // Display the results
+  document.getElementById("output").innerHTML = `
+    <strong>Current Accuracy:</strong> ${accuracy}<br>
+    <strong>Current Hit Rate:</strong> <span class="highlight">${actualPercent.toFixed(2)}%</span><br><br>
+    <table>
+      <thead>
+        <tr>
+          <th>Hit Rate</th>
+          <th>Req. Acc</th>
+          <th>Acc Needed</th>
+          <th>DEX Needed</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  `;
+
+  // Gear and Buff summary
+  document.getElementById("gearSummary").innerHTML = `
+  <div><strong>Total ACC:</strong> <span class="highlight">${totalAcc.toFixed(1)}</span></div>
+  <br>
+  <div><strong>ACC from Gear:</strong> ${gearAcc}</div>
+  <div><strong>DEX on Gear:</strong> ${dexFromGearAsAcc.toFixed(1)}</div>
+  <div><strong>Base DEX:</strong> ${accFromDex.toFixed(1)}</div>
+  <div><strong>Base LUK:</strong> ${accFromLuk.toFixed(1)}</div>
+  <div><strong>Mastery:</strong> ${masteryAcc}</div>
+  <div><strong>Potion/Buff:</strong> ${potionAcc}</div>
+  <div><strong>Hex:</strong> ${hexAcc}</div>
+`;
+}
+
+    document.querySelectorAll("input, select").forEach(el => el.addEventListener("input", calculate));
+    window.addEventListener("load", calculate);
+	
+	function saveInputs() {
+  const inputs = document.querySelectorAll("input, select");
+  inputs.forEach(input => {
+    // Only save input values for fields that are not the monster/boss select dropdowns
+    if (input.id !== "monsterSelect" && input.id !== "bossSelect") {
+      localStorage.setItem(input.id, input.value);
     }
+  });
+}
+
+
+function loadInputs() {
+  const inputs = document.querySelectorAll("input, select");
+  inputs.forEach(input => {
+    // Skip the monsterSelect and bossSelect when loading saved data
+    if (input.id !== "monsterSelect" && input.id !== "bossSelect") {
+      const saved = localStorage.getItem(input.id);
+      if (saved !== null) {
+        input.value = saved;
+      }
+    }
+  });
+}
+
+
+// Save on every input change
+document.querySelectorAll("input, select").forEach(el => {
+  el.addEventListener("input", () => {
+    saveInputs();
+    calculate();
+  });
+});
+
+// Load on page load
+window.addEventListener("load", () => {
+  loadInputs();
+  calculate();
+});
+
+document.getElementById("resetButton").addEventListener("click", () => {
+  // Only reset the gear/stats/buffs fields
+  const resetFields = {
+    weaponAcc: 0, weaponDex: 0,
+    helmAcc: 0, helmDex: 0,
+    overallAcc: 0, overallDex: 0,
+    glovesAcc: 0, glovesDex: 0,
+    faceAcc: 0, faceDex: 0,
+    pendantAcc: 0, pendantDex: 0,
+    earringsAcc: 0, earringsDex: 0,
+    shoesAcc: 0, shoesDex: 0,
+    baseDex: 4, baseLuk: 4,
+  };
+
+  // Loop through each of the fields and reset their values
+  for (const id in resetFields) {
+    const el = document.getElementById(id);
+    if (el) el.value = resetFields[id];
+  }
+
+  // Recalculate with the updated values (after reset)
+  calculate();
+});
+
+
   </script>
 </body>
 </html>
